@@ -22,6 +22,7 @@ unless ( -d $opt{output} ) {
     File::Path::mkpath($opt{output});
 }
 
+# See http://programming.kuribo.info/2011/07/google_24.html
 sub get_attachments {
     my( $user_id, $params ) = @_;
     $params ||= {};
@@ -41,13 +42,13 @@ sub get_attachments {
         for my $attachment(@{$item->{object}{attachments}}) {
             if ($attachment->{objectType} eq 'photo') {
                 my $image = $attachment->{fullImage}{url};
+                $image =~ s|([^/]+)/([^/]+)$|s0/$2|;
                 my $filename = sprintf '%s-%s.jpg', $basename, $n++;
                 save_image( $image, $filename );
             } elsif ($attachment->{objectType} eq 'album') {
                 my $thumbnails = $attachment->{thumbnails};
                 for my $thumbnail(@{$thumbnails}) {
                     my $image = $thumbnail->{image}{url};
-                    # See http://programming.kuribo.info/2011/07/google_24.html
                     $image =~ s|([^/]+)/([^/]+)$|s0/$2|;
                     my $filename = sprintf '%s-%s.jpg', $basename, $n++;
                     save_image( $image, $filename );
