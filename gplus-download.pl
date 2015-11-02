@@ -42,14 +42,15 @@ sub get_attachments {
             if ($attachment->{objectType} eq 'photo') {
                 my $image = $attachment->{fullImage}{url};
                 my $filename = sprintf '%s-%s.jpg', $basename, $n++;
-                my $path = File::Spec->catfile( $opt{output}, $filename );
-                unless (-e $path) {
-                    open my $fh, '>', $path or die "$!: $path";
-                    $furl->request(
-                        method => 'GET',
-                        url => $image,
-                        write_file => $fh,
-                    );
+                save_image( $image, $filename );
+            } elsif ($attachment->{objectType} eq 'album') {
+                my $thumbnails = $attachment->{thumbnails};
+                for my $thumbnail(@{$thumbnails}) {
+                    my $image = $thumbnail->{image}{url};
+                    # See http://programming.kuribo.info/2011/07/google_24.html
+                    $image =~ s|([^/]+)/([^/]+)$|s0/$2|;
+                    my $filename = sprintf '%s-%s.jpg', $basename, $n++;
+                    save_image( $image, $filename );
                 }
             }
         }
@@ -64,6 +65,20 @@ sub get_attachments {
         get_attachments( $user_id, { pageToken => $token });
     } 
 }
+
+sub save_image {
+    my( $image, $filename ) = @_;
+    my $path = File::Spec->catfile( $opt{output}, $filename );
+    unless (-e $path) {
+        open my $fh, '>', $path or die "$!: $path";
+        $furl->request(
+            method => 'GET',
+            url => $image,
+            write_file => $fh,
+        );
+    }
+}
+
 get_attachments( $opt{user} );
 
 
